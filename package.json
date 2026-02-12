@@ -2,6 +2,14 @@
   "name": "alerte-incendie",
   "version": "0.1.0",
   "private": true,
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,18 +17,28 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@types/pg": "^8.16.0",
+    "airtable": "^0.12.2",
+    "framer-motion": "^12.31.0",
+    "leaflet": "^1.9.4",
     "next": "16.1.5",
+    "pg": "^8.18.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.5",
+    "jest": "^30.2.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-jest": "^29.4.6",
+    "typescript": "5.9.3"
   }
 }

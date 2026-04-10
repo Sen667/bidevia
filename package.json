@@ -19,6 +19,7 @@
   "dependencies": {
     "@types/pg": "^8.16.0",
     "airtable": "^0.12.2",
+    "dotenv": "^17.3.1",
     "framer-motion": "^12.31.0",
     "leaflet": "^1.9.4",
     "next": "16.1.5",

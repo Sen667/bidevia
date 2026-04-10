@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { Incendie } from './types';
+import { CatastropheNaturelle, Incendie, Inondation, DegatDesEaux } from './types';
 
 // Configuration de la connexion PostgreSQL
 const pool = new Pool({
@@ -31,28 +31,24 @@ export async function getIncendies(): Promise<Incendie[]> {
     const result = await pool.query(
       `SELECT 
         id, 
-        city,
-        rue_sinistre,
-        department,
-        latitude, 
-        longitude, 
-        date_event,
-        date_sinistre,
-        heure_sinistre,
+        category,
         title,
-        summary,
-        type_sinistre,
+        city,
+        identity,
+        department,
+        incident_street,
+        publication_date,
+        incident_date,
+        incident_time,
+        building_type,
         severity_index,
         resources_deployed,
-        identite,
-        reason_of_rejection,
+        summary,
         source_url,
         source_name,
         created_at
       FROM log_incendies 
-      WHERE latitude IS NOT NULL 
-        AND longitude IS NOT NULL 
-      ORDER BY date_event DESC NULLS LAST, created_at DESC`
+      ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
 
     console.log(`✅ ${result.rows.length} incendies trouvés dans la base`);
@@ -60,47 +56,32 @@ export async function getIncendies(): Promise<Incendie[]> {
     const validIncendies = result.rows
       .map(row => {
         try {
-          // Vérifier que les coordonnées sont des nombres valides
-          const lat = parseFloat(row.latitude);
-          const lng = parseFloat(row.longitude);
-
-          if (isNaN(lat) || isNaN(lng)) {
-            console.warn(`⚠️ Coordonnées invalides pour l'incendie #${row.id}: lat=${row.latitude}, lng=${row.longitude}`);
-            return null;
-          }
-
-          // Vérifier que les coordonnées sont dans les limites géographiques
-          if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-            console.warn(`⚠️ Coordonnées hors limites pour l'incendie #${row.id}: lat=${lat}, lng=${lng}`);
-            return null;
-          }
-
           return {
             id: row.id.toString(),
+            category: row.category || '',
             city: row.city || '',
-            rue_sinistre: row.rue_sinistre,
-            department: row.department,
-            lat,
-            lng,
-            date_event: row.date_event,
-            date_sinistre: row.date_sinistre,
-            heure_sinistre: row.heure_sinistre,
+            incident_street: row.incident_street || '',
+            department: row.department || '',
+            lat: 0,
+            lng: 0,
+            publication_date: row.publication_date,
+            incident_date: row.incident_date || '',
+            incident_time: row.incident_time || '',
             title: row.title || '',
-            summary: row.summary,
-            type_sinistre: row.type_sinistre || '',
-            severity_index: row.severity_index,
-            resources_deployed: row.resources_deployed,
-            identite: row.identite,
-            reason_of_rejection: row.reason_of_rejection,
-            source_url: row.source_url,
-            source_name: row.source_name,
+            summary: row.summary || '',
+            building_type: row.building_type || '',
+            severity_index: row.severity_index || 0,
+            resources_deployed: row.resources_deployed || '',
+            identity: row.identity || '',
+            source_url: row.source_url || '',
+            source_name: row.source_name || '',
             created_at: row.created_at,
             // Champs de compatibilité
             ville: row.city,
-            type: row.type_sinistre,
+            type: row.building_type,
             gravite: row.severity_index,
             resume: row.summary,
-            date: row.date_event,
+            date: row.incident_date,
             sources: row.source_url,
           };
         } catch (rowError) {
@@ -110,7 +91,7 @@ export async function getIncendies(): Promise<Incendie[]> {
       })
       .filter((inc) => inc !== null) as Incendie[];
 
-    console.log(`✅ ${validIncendies.length} incendies avec coordonnées GPS valides`);
+    console.log(`✅ ${validIncendies.length} incendies valides`);
     
     return validIncendies;
   } catch (error) {
@@ -127,54 +108,54 @@ export async function getIncendiesRaw(): Promise<any[]> {
     const result = await pool.query(
       `SELECT 
         id, 
-        city,
-        rue_sinistre,
-        department,
-        latitude, 
-        longitude, 
-        date_event,
-        date_sinistre,
-        heure_sinistre,
+        category,
         title,
-        summary,
-        type_sinistre,
+        city,
+        identity,
+        department,
+        incident_street,
+        publication_date,
+        incident_date,
+        incident_time,
+        building_type,
         severity_index,
         resources_deployed,
-        identite,
-        reason_of_rejection,
+        summary,
         source_url,
         source_name,
         created_at
       FROM log_incendies 
-      ORDER BY date_event DESC NULLS LAST, created_at DESC`
+      ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
+
+    console.log(`✅ ${result.rows.length} incendies trouvés dans la base`);
 
     return result.rows.map(row => ({
       id: row.id.toString(),
+      category: row.category || '',
       city: row.city || '',
-      rue_sinistre: row.rue_sinistre,
-      department: row.department,
-      lat: row.latitude ? parseFloat(row.latitude) : null,
-      lng: row.longitude ? parseFloat(row.longitude) : null,
-      date_event: row.date_event,
-      date_sinistre: row.date_sinistre,
-      heure_sinistre: row.heure_sinistre,
+      incident_street: row.incident_street || '',
+      department: row.department || '',
+      lat: 0,
+      lng: 0,
+      publication_date: row.publication_date,
+      incident_date: row.incident_date || '',
+      incident_time: row.incident_time || '',
       title: row.title || '',
-      summary: row.summary,
-      type_sinistre: row.type_sinistre || '',
-      severity_index: row.severity_index,
-      resources_deployed: row.resources_deployed,
-      identite: row.identite,
-      reason_of_rejection: row.reason_of_rejection,
-      source_url: row.source_url,
-      source_name: row.source_name,
+      summary: row.summary || '',
+      building_type: row.building_type || '',
+      severity_index: row.severity_index || 0,
+      resources_deployed: row.resources_deployed || '',
+      identity: row.identity || '',
+      source_url: row.source_url || '',
+      source_name: row.source_name || '',
       created_at: row.created_at,
       // Champs de compatibilité
       ville: row.city,
-      type: row.type_sinistre,
+      type: row.building_type,
       gravite: row.severity_index,
       resume: row.summary,
-      date: row.date_event,
+      date: row.incident_date,
       sources: row.source_url,
     }));
   } catch (error) {
@@ -182,6 +163,197 @@ export async function getIncendiesRaw(): Promise<any[]> {
     return [];
   }
 }
+
+
+export async function getCatastropheNaturelles(): Promise<CatastropheNaturelle[]> {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        id, 
+        category,
+        title,
+        city,
+        identity,
+        department,
+        incident_street,
+        publication_date,
+        incident_date,
+        incident_time,
+        building_type,
+        severity_index,
+        resources_deployed,
+        summary,
+        source_url,
+        source_name,
+        created_at
+      FROM log_catastrophenaturelles
+      ORDER BY incident_date DESC NULLS LAST, created_at DESC`
+    );
+
+    console.log(`✅ ${result.rows.length} catastrophes naturelles trouvées dans la base`);
+
+    return result.rows.map(row => ({
+      id: row.id.toString(),
+      category: row.category || '',
+      city: row.city || '',
+      incident_street: row.incident_street || '',
+      department: row.department || '',
+      lat: 0,
+      lng: 0,
+      publication_date: row.publication_date,
+      incident_date: row.incident_date || '',
+      incident_time: row.incident_time || '',
+      title: row.title || '',
+      summary: row.summary || '',
+      building_type: row.building_type || '',
+      severity_index: row.severity_index || 0,
+      resources_deployed: row.resources_deployed || '',
+      identity: row.identity || '',
+      source_url: row.source_url || '',
+      source_name: row.source_name || '',
+      created_at: row.created_at,
+      // Champs de compatibilité
+      ville: row.city,
+      type: row.building_type,
+      gravite: row.severity_index,
+      resume: row.summary,
+      date: row.incident_date,
+      sources: row.source_url,
+    }));
+  } catch (error) {
+    console.error('Erreur lors de la récupération des catastrophes naturelles:', error);
+    return [];
+  }
+}
+
+export async function getInondations(): Promise<Inondation[]> {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        id, 
+        category,
+        title,
+        city,
+        identity,
+        department,
+        incident_street,
+        publication_date,
+        incident_date,
+        incident_time,
+        building_type,
+        severity_index,
+        resources_deployed,
+        summary,
+        source_url,
+        source_name,
+        created_at
+      FROM log_inondation
+      ORDER BY incident_date DESC NULLS LAST, created_at DESC`
+    );
+
+    console.log(`✅ ${result.rows.length} inondations trouvées dans la base`);
+
+    return result.rows.map(row => ({
+      id: row.id.toString(),
+      category: row.category || '',
+      city: row.city || '',
+      incident_street: row.incident_street || '',
+      department: row.department || '',
+      lat: 0,
+      lng: 0,
+      publication_date: row.publication_date,
+      incident_date: row.incident_date || '',
+      incident_time: row.incident_time || '',
+      title: row.title || '',
+      summary: row.summary || '',
+      building_type: row.building_type || '',
+      severity_index: row.severity_index || 0,
+      resources_deployed: row.resources_deployed || '',
+      identity: row.identity || '',
+      source_url: row.source_url || '',
+      source_name: row.source_name || '',
+      created_at: row.created_at,
+      // Champs de compatibilité
+      ville: row.city,
+      type: row.building_type,
+      gravite: row.severity_index,
+      resume: row.summary,
+      date: row.incident_date,
+      sources: row.source_url,
+    }));
+  } catch (error) {
+    console.error('Erreur lors de la récupération des inondations:', error);
+    return [];
+  }
+}
+
+export async function getDegatsDesEaux(): Promise<DegatDesEaux[]> {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        id, 
+        category,
+        title,
+        city,
+        identity,
+        department,
+        incident_street,
+        publication_date,
+        incident_date,
+        incident_time,
+        building_type,
+        severity_index,
+        resources_deployed,
+        summary,
+        source_url,
+        source_name,
+        created_at
+      FROM log_degatsdeseaux
+      ORDER BY incident_date DESC NULLS LAST, created_at DESC`
+    );
+
+    console.log(`✅ ${result.rows.length} dégâts des eaux trouvés dans la base`);
+
+    return result.rows.map(row => ({
+      id: row.id.toString(),
+      category: row.category || '',
+      city: row.city || '',
+      incident_street: row.incident_street || '',
+      department: row.department || '',
+      lat: 0,
+      lng: 0,
+      publication_date: row.publication_date,
+      incident_date: row.incident_date || '',
+      incident_time: row.incident_time || '',
+      title: row.title || '',
+      summary: row.summary || '',
+      building_type: row.building_type || '',
+      severity_index: row.severity_index || 0,
+      resources_deployed: row.resources_deployed || '',
+      identity: row.identity || '',
+      source_url: row.source_url || '',
+      source_name: row.source_name || '',
+      created_at: row.created_at,
+      ville: row.city,
+      type: row.building_type,
+      gravite: row.severity_index,
+      resume: row.summary,
+      date: row.incident_date,
+      sources: row.source_url,
+    }));
+  } catch (error) {
+    console.error('Erreur lors de la récupération des dégâts des eaux:', error);
+    return [];
+  }
+}
+
+
+
+
+
+
+
+
 
 /**
  * Ferme le pool de connexions (utile pour les tests)

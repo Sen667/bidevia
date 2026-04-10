@@ -58,10 +58,10 @@ export default function Map({ data }: MapProps) {
               </h3>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-bold uppercase py-0.5 px-2 bg-red-100 text-red-600 rounded-full border border-red-200">
-                  {incendie.type_sinistre || incendie.type || 'Incident'}
+                  {incendie.building_type || incendie.type || 'Incident'}
                 </span>
                 <span className="text-xs text-slate-500 font-mono">
-                  {incendie.heure_sinistre || (incendie.date_event ? new Date(incendie.date_event).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (incendie.date ? new Date(incendie.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'))}
+                  {incendie.incident_time || (incendie.incident_date ? new Date(incendie.incident_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (incendie.date ? new Date(incendie.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'))}
                 </span>
               </div>
               <p className="text-sm text-slate-700 leading-snug mb-2 font-light">

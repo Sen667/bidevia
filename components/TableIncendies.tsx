@@ -4,25 +4,42 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-asc';
+type FilterOption = 'all' | 'incendies' | 'catastrophes' | 'inondations' | 'degats';
 
-export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
+export default function TableIncendiesStyleApple({ data, catastrophes = [], inondations = [], degats = [] }: { data: any[], catastrophes?: any[], inondations?: any[], degats?: any[] }) {
   const [selected, setSelected] = useState<any | null>(null);
   const [activeSort, setActiveSort] = useState<SortOption>('date-desc');
+  const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
 
   // Debug: Afficher les données reçues
   console.log('🔍 TableIncendies - Données reçues:', data.length, 'incendies');
+  console.log('🔍 Inondations reçues:', inondations.length);
+  console.log('🔍 Dégâts des eaux reçus:', degats.length);
   console.log('🔍 Premier élément:', data[0]);
 
-  // Tri des données selon l'option sélectionnée
+  // Tri et filtrage des données
   const sortedData = useMemo(() => {
-    let result = [...data];
+    let result = [];
+    
+    // Application du filtre
+    if (activeFilter === 'all') {
+      result = [...data, ...catastrophes, ...inondations, ...degats];
+    } else if (activeFilter === 'incendies') {
+      result = [...data];
+    } else if (activeFilter === 'catastrophes') {
+      result = [...catastrophes];
+    } else if (activeFilter === 'inondations') {
+      result = [...inondations];
+    } else if (activeFilter === 'degats') {
+      result = [...degats];
+    }
     
     switch (activeSort) {
       case 'date-desc':
         // Plus récent au plus ancien
         result.sort((a, b) => {
-          const dateA = a.date_event || a.created_at || a.date;
-          const dateB = b.date_event || b.created_at || b.date;
+          const dateA = a.incident_date || a.created_at || a.date;
+          const dateB = b.incident_date || b.created_at || b.date;
           return new Date(dateB).getTime() - new Date(dateA).getTime();
         });
         break;
@@ -30,8 +47,8 @@ export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
       case 'date-asc':
         // Plus ancien au plus récent
         result.sort((a, b) => {
-          const dateA = a.date_event || a.created_at || a.date;
-          const dateB = b.date_event || b.created_at || b.date;
+          const dateA = a.incident_date || a.created_at || a.date;
+          const dateB = b.incident_date || b.created_at || b.date;
           return new Date(dateA).getTime() - new Date(dateB).getTime();
         });
         break;
@@ -56,7 +73,7 @@ export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
     }
     
     return result;
-  }, [data, activeSort]);
+  }, [data, activeSort, activeFilter, catastrophes, inondations, degats]);
 
   console.log('🔍 Données triées:', sortedData.length, 'incendies');
 
@@ -64,55 +81,113 @@ export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
     <div className="w-full font-sans antialiased space-y-6">
       
       {/* Barre de Tri - Style Apple Music/Store */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-bold text-slate-600">Trier par :</span>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <button
-            onClick={() => setActiveSort('date-desc')}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${
-              activeSort === 'date-desc'
-              ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
-              : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
-            }`}
-          >
-            📅 Date ↓ (récent)
-          </button>
-          <button
-            onClick={() => setActiveSort('date-asc')}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${
-              activeSort === 'date-asc'
-              ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
-              : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
-            }`}
-          >
-            📅 Date ↑ (ancien)
-          </button>
-          <button
-            onClick={() => setActiveSort('severity-desc')}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${
-              activeSort === 'severity-desc'
-              ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
-              : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
-            }`}
-          >
-            🔥 Sévérité ↓ (élevée)
-          </button>
-          <button
-            onClick={() => setActiveSort('severity-asc')}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${
-              activeSort === 'severity-asc'
-              ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
-              : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
-            }`}
-          >
-            🔥 Sévérité ↑ (faible)
-          </button>
+      <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto">
+          <span className="text-sm font-bold text-slate-600 shrink-0">Filtrer :</span>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full no-scrollbar">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeFilter === 'all'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              🔄 Tout
+            </button>
+            <button
+              onClick={() => setActiveFilter('incendies')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeFilter === 'incendies'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              🔥 Incendies
+            </button>
+            <button
+              onClick={() => setActiveFilter('catastrophes')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeFilter === 'catastrophes'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              🌪️ Catastrophes Nat.
+            </button>
+            <button
+              onClick={() => setActiveFilter('inondations')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeFilter === 'inondations'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              🌊 Inondations
+            </button>
+            <button
+              onClick={() => setActiveFilter('degats')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeFilter === 'degats'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              💧 Dégâts des eaux
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto">
+          <span className="text-sm font-bold text-slate-600 shrink-0">Trier :</span>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full no-scrollbar">
+            <button
+              onClick={() => setActiveSort('date-desc')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeSort === 'date-desc'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              📅 Date ↓ (récent)
+            </button>
+            <button
+              onClick={() => setActiveSort('date-asc')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeSort === 'date-asc'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              📅 Date ↑ (ancien)
+            </button>
+            <button
+              onClick={() => setActiveSort('severity-desc')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeSort === 'severity-desc'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              🔥 Sévérité ↓ (élevée)
+            </button>
+            <button
+              onClick={() => setActiveSort('severity-asc')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                activeSort === 'severity-asc'
+                ? 'bg-[#1C1C1E] text-white shadow-lg scale-105' 
+                : 'bg-white text-slate-500 hover:bg-gray-100 border border-gray-100'
+              }`}
+            >
+              🔥 Sévérité ↑ (faible)
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.05)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full border-collapse min-w-[700px]">
             <thead>
               <tr className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] border-b border-gray-50/50">
                 <th className="px-6 py-5 text-left">Ville</th>
@@ -137,15 +212,15 @@ export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                           </svg>
                         </div>
-                        <p className="text-slate-500 font-semibold">Aucun incendie enregistré</p>
+                        <p className="text-slate-500 font-semibold">Aucun événement enregistré</p>
                         <p className="text-xs text-slate-400">Les données apparaîtront ici dès qu'elles seront disponibles</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  sortedData.map((inc) => (
+                  sortedData.map((inc, index) => (
                     <motion.tr 
-                      key={inc.id}
+                      key={`${inc.category || 'event'}-${inc.id}-${index}`}
                       layout // Magie Framer Motion : gère la position
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -160,15 +235,15 @@ export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-gray-100/80 text-gray-600 border border-gray-200/50">
-                          {inc.type_sinistre || inc.type || 'N/A'}
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-gray-100/80 text-gray-600 border border-gray-200/50 whitespace-nowrap truncate max-w-[120px] md:max-w-full">
+                          {inc.building_type || inc.type || 'N/A'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <SeverityBadge level={inc.severity_index || inc.gravite || 0} />
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-700 line-clamp-1 max-w-[250px]">
+                        <span className="text-sm font-medium text-slate-700 line-clamp-1 max-w-[150px] sm:max-w-[250px] lg:max-w-[400px]">
                           {inc.title || inc.resume || 'Incident sans titre'}
                         </span>
                       </td>
@@ -177,7 +252,7 @@ export default function TableIncendiesStyleApple({ data }: { data: any[] }) {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setSelected(inc)} 
-                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#F2F2F7] text-[#1C1C1E] hover:bg-[#1C1C1E] hover:text-white text-[13px] font-bold transition-all"
+                          className="inline-flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-full bg-[#F2F2F7] text-[#1C1C1E] hover:bg-[#1C1C1E] hover:text-white text-[12px] md:text-[13px] font-bold transition-all whitespace-nowrap"
                         >
                           Détails
                         </motion.button>

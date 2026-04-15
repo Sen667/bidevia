@@ -46,13 +46,15 @@ export async function getIncendies(): Promise<Incendie[]> {
         summary,
         source_url,
         source_name,
-        created_at
+        created_at,
+        latitude,
+        longitude
       FROM log_incendies 
       ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
 
     console.log(`✅ ${result.rows.length} incendies trouvés dans la base`);
-
+    
     const validIncendies = result.rows
       .map(row => {
         try {
@@ -62,8 +64,8 @@ export async function getIncendies(): Promise<Incendie[]> {
             city: row.city || '',
             incident_street: row.incident_street || '',
             department: row.department || '',
-            lat: 0,
-            lng: 0,
+            lat: row.latitude ? parseFloat(row.latitude) : 0,
+            lng: row.longitude ? parseFloat(row.longitude) : 0,
             publication_date: row.publication_date,
             incident_date: row.incident_date || '',
             incident_time: row.incident_time || '',
@@ -123,41 +125,34 @@ export async function getIncendiesRaw(): Promise<any[]> {
         summary,
         source_url,
         source_name,
-        created_at
+        created_at,
+        latitude,
+        longitude
       FROM log_incendies 
       ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
 
     console.log(`✅ ${result.rows.length} incendies trouvés dans la base`);
-
-    return result.rows.map(row => ({
-      id: row.id.toString(),
-      category: row.category || '',
-      city: row.city || '',
-      incident_street: row.incident_street || '',
-      department: row.department || '',
-      lat: 0,
-      lng: 0,
-      publication_date: row.publication_date,
-      incident_date: row.incident_date || '',
-      incident_time: row.incident_time || '',
-      title: row.title || '',
-      summary: row.summary || '',
-      building_type: row.building_type || '',
-      severity_index: row.severity_index || 0,
-      resources_deployed: row.resources_deployed || '',
-      identity: row.identity || '',
-      source_url: row.source_url || '',
-      source_name: row.source_name || '',
-      created_at: row.created_at,
-      // Champs de compatibilité
-      ville: row.city,
-      type: row.building_type,
-      gravite: row.severity_index,
-      resume: row.summary,
-      date: row.incident_date,
-      sources: row.source_url,
-    }));
+    
+    return result.rows.map(row => {
+      if (row.latitude && row.longitude) {
+        console.log(`📍 Raw Incendie #${row.id} - Lat: ${row.latitude}, Lng: ${row.longitude}`);
+      }
+      return {
+        id: row.id.toString(),
+        category: row.category || '',
+        city: row.city || '',
+        ville: row.city || '',
+        type: row.building_type || '',
+        gravite: row.severity_index || 0,
+        resume: row.summary || '',
+        date: row.incident_date || row.publication_date || '',
+        sources: row.source_url || '',
+        ...row,
+        lat: row.latitude ? parseFloat(row.latitude) : 0,
+        lng: row.longitude ? parseFloat(row.longitude) : 0,
+      };
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des incendies (raw):', error);
     return [];
@@ -185,41 +180,34 @@ export async function getCatastropheNaturelles(): Promise<CatastropheNaturelle[]
         summary,
         source_url,
         source_name,
-        created_at
+        created_at,
+        latitude,
+        longitude
       FROM log_catastrophenaturelles
       ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
 
     console.log(`✅ ${result.rows.length} catastrophes naturelles trouvées dans la base`);
-
-    return result.rows.map(row => ({
-      id: row.id.toString(),
-      category: row.category || '',
-      city: row.city || '',
-      incident_street: row.incident_street || '',
-      department: row.department || '',
-      lat: 0,
-      lng: 0,
-      publication_date: row.publication_date,
-      incident_date: row.incident_date || '',
-      incident_time: row.incident_time || '',
-      title: row.title || '',
-      summary: row.summary || '',
-      building_type: row.building_type || '',
-      severity_index: row.severity_index || 0,
-      resources_deployed: row.resources_deployed || '',
-      identity: row.identity || '',
-      source_url: row.source_url || '',
-      source_name: row.source_name || '',
-      created_at: row.created_at,
-      // Champs de compatibilité
-      ville: row.city,
-      type: row.building_type,
-      gravite: row.severity_index,
-      resume: row.summary,
-      date: row.incident_date,
-      sources: row.source_url,
-    }));
+    
+    return result.rows.map(row => {
+      if (row.latitude && row.longitude) {
+        console.log(`📍 Catastrophe #${row.id} - Lat: ${row.latitude}, Lng: ${row.longitude}`);
+      }
+      return {
+        id: row.id.toString(),
+        category: row.category || '',
+        city: row.city || '',
+        ville: row.city || '',
+        type: row.building_type || '',
+        gravite: row.severity_index || 0,
+        resume: row.summary || '',
+        date: row.incident_date || row.publication_date || '',
+        sources: row.source_url || '',
+        ...row,
+        lat: row.latitude ? parseFloat(row.latitude) : 0,
+        lng: row.longitude ? parseFloat(row.longitude) : 0,
+      };
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des catastrophes naturelles:', error);
     return [];
@@ -246,41 +234,34 @@ export async function getInondations(): Promise<Inondation[]> {
         summary,
         source_url,
         source_name,
-        created_at
+        created_at,
+        latitude,
+        longitude
       FROM log_inondation
       ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
 
     console.log(`✅ ${result.rows.length} inondations trouvées dans la base`);
-
-    return result.rows.map(row => ({
-      id: row.id.toString(),
-      category: row.category || '',
-      city: row.city || '',
-      incident_street: row.incident_street || '',
-      department: row.department || '',
-      lat: 0,
-      lng: 0,
-      publication_date: row.publication_date,
-      incident_date: row.incident_date || '',
-      incident_time: row.incident_time || '',
-      title: row.title || '',
-      summary: row.summary || '',
-      building_type: row.building_type || '',
-      severity_index: row.severity_index || 0,
-      resources_deployed: row.resources_deployed || '',
-      identity: row.identity || '',
-      source_url: row.source_url || '',
-      source_name: row.source_name || '',
-      created_at: row.created_at,
-      // Champs de compatibilité
-      ville: row.city,
-      type: row.building_type,
-      gravite: row.severity_index,
-      resume: row.summary,
-      date: row.incident_date,
-      sources: row.source_url,
-    }));
+    
+    return result.rows.map(row => {
+      if (row.latitude && row.longitude) {
+        console.log(`📍 Inondation #${row.id} - Lat: ${row.latitude}, Lng: ${row.longitude}`);
+      }
+      return {
+        id: row.id.toString(),
+        category: row.category || '',
+        city: row.city || '',
+        ville: row.city || '',
+        type: row.building_type || '',
+        gravite: row.severity_index || 0,
+        resume: row.summary || '',
+        date: row.incident_date || row.publication_date || '',
+        sources: row.source_url || '',
+        ...row,
+        lat: row.latitude ? parseFloat(row.latitude) : 0,
+        lng: row.longitude ? parseFloat(row.longitude) : 0,
+      };
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des inondations:', error);
     return [];
@@ -307,40 +288,34 @@ export async function getDegatsDesEaux(): Promise<DegatDesEaux[]> {
         summary,
         source_url,
         source_name,
-        created_at
+        created_at,
+        latitude,
+        longitude
       FROM log_degatsdeseaux
       ORDER BY incident_date DESC NULLS LAST, created_at DESC`
     );
 
     console.log(`✅ ${result.rows.length} dégâts des eaux trouvés dans la base`);
-
-    return result.rows.map(row => ({
-      id: row.id.toString(),
-      category: row.category || '',
-      city: row.city || '',
-      incident_street: row.incident_street || '',
-      department: row.department || '',
-      lat: 0,
-      lng: 0,
-      publication_date: row.publication_date,
-      incident_date: row.incident_date || '',
-      incident_time: row.incident_time || '',
-      title: row.title || '',
-      summary: row.summary || '',
-      building_type: row.building_type || '',
-      severity_index: row.severity_index || 0,
-      resources_deployed: row.resources_deployed || '',
-      identity: row.identity || '',
-      source_url: row.source_url || '',
-      source_name: row.source_name || '',
-      created_at: row.created_at,
-      ville: row.city,
-      type: row.building_type,
-      gravite: row.severity_index,
-      resume: row.summary,
-      date: row.incident_date,
-      sources: row.source_url,
-    }));
+    
+    return result.rows.map(row => {
+      if (row.latitude && row.longitude) {
+        console.log(`📍 Dégât Eaux #${row.id} - Lat: ${row.latitude}, Lng: ${row.longitude}`);
+      }
+      return {
+        id: row.id.toString(),
+        category: row.category || '',
+        city: row.city || '',
+        ville: row.city || '',
+        type: row.building_type || '',
+        gravite: row.severity_index || 0,
+        resume: row.summary || '',
+        date: row.incident_date || row.publication_date || '',
+        sources: row.source_url || '',
+        ...row,
+        lat: row.latitude ? parseFloat(row.latitude) : 0,
+        lng: row.longitude ? parseFloat(row.longitude) : 0,
+      };
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des dégâts des eaux:', error);
     return [];

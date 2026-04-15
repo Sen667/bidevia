@@ -44,26 +44,26 @@ export default async function Home() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-gradient-to-tr from-orange-100/40 to-white/0 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative max-w-[1600px] mx-auto px-6 py-10 space-y-8">
+      <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
         
-        <header className="flex flex-col md:flex-row justify-between items-end gap-6">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#1C1C1E] rounded-2xl flex items-center justify-center shadow-2xl shadow-black/20">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1C1C1E] rounded-2xl flex items-center justify-center shadow-2xl shadow-black/20 shrink-0">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse" />
               </div>
-              <h1 className="text-4xl font-black tracking-tight italic">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight italic">
                 JDE<span className="text-slate-400 not-italic font-light">WATCH</span>
               </h1>
             </div>
-            <p className="text-slate-500 font-medium ml-1">Surveillance temps réel • Hauts-de-France</p>
+            <p className="text-sm sm:text-base text-slate-500 font-medium ml-1">Surveillance temps réel • Hauts-de-France</p>
           </div>
 
           {/* Quick Stats Row */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3 sm:gap-4 w-full lg:w-auto">
             <StatCard label="Total" value={totalIncendies} color="text-slate-900" />
             <StatCard label="Critiques" value={highSeverity} color="text-red-500" isAlert />
-            <div className="hidden sm:flex px-6 py-4 bg-white/50 backdrop-blur-md rounded-[1.5rem] border border-white/50 shadow-sm items-center gap-3">
+            <div className="hidden sm:flex px-4 sm:px-6 py-4 bg-white/50 backdrop-blur-md rounded-[1.5rem] border border-white/50 shadow-sm items-center gap-3 flex-1 lg:flex-none justify-center lg:justify-start">
               <div className="text-right">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Statut Système</p>
                 <p className="text-sm font-bold text-green-600 flex items-center justify-end gap-1.5">
@@ -75,10 +75,10 @@ export default async function Home() {
         </header>
 
         {/* Main Grid: Sidebar + Map */}
-        <section className="grid grid-cols-1 xl:grid-cols-12 gap-8 h-auto xl:h-[780px]">
+        <section className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 min-h-[500px] xl:h-[780px]">
           
           {/* Sidebar - Liste style iOS */}
-          <div className="xl:col-span-3 bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col">
+          <div className="xl:col-span-3 bg-white/60 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.5rem] border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-[400px] xl:h-auto">
             <div className="p-7 border-b border-gray-100/50 flex justify-between items-center">
               <h2 className="text-sm font-black uppercase tracking-[0.15em] text-slate-400">Flux Live</h2>
               <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">LIVE</span>
@@ -92,7 +92,7 @@ export default async function Home() {
           </div>
 
           {/* Map Container */}
-          <div className="xl:col-span-9 group relative bg-white rounded-[2.5rem] overflow-hidden border border-white shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+          <div className="xl:col-span-9 group relative bg-white rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white shadow-[0_20px_50px_rgba(0,0,0,0.08)] min-h-[400px] xl:min-h-0">
             <MapClient data={incendies} />
             
             {/* Map UI Overlays */}
@@ -105,13 +105,13 @@ export default async function Home() {
         </section>
 
         {/* Full Table Section */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl font-black tracking-tight">Archives complètes</h2>
-            <div className="h-px flex-1 mx-8 bg-gradient-to-r from-gray-200 to-transparent" />
+        <section className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-2 gap-4">
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight">Archives complètes</h2>
+            <div className="hidden sm:block h-px flex-1 mx-8 bg-gradient-to-r from-gray-200 to-transparent" />
           </div>
           
-          <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/40 p-2 shadow-sm">
+          <div className="bg-white/40 backdrop-blur-md rounded-[2rem] sm:rounded-[2.5rem] border border-white/40 p-2 shadow-sm overflow-hidden">
              <TableIncendies data={allIncendies} catastrophes={catastrophes} inondations={inondations} degats={degats} />
           </div>
         </section>
@@ -125,7 +125,7 @@ export default async function Home() {
 
 function StatCard({ label, value, color, isAlert }: { label: string, value: number, color: string, isAlert?: boolean }) {
   return (
-    <div className={`p-4 rounded-[1.5rem] border transition-all duration-300 flex flex-col justify-center items-start shadow-sm ${isAlert ? 'bg-red-50 border-red-200' : 'bg-white border-transparent hover:shadow-md'}`}>
+    <div className={`p-4 rounded-[1.5rem] border transition-all duration-300 flex flex-col justify-center items-start shadow-sm flex-1 min-w-[120px] ${isAlert ? 'bg-red-50 border-red-200' : 'bg-white border-transparent hover:shadow-md'}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 group-hover:text-slate-600 transition-colors">{label}</p>
       <p className={`text-3xl font-black ${color} tabular-nums`}>{value}</p>
     </div>

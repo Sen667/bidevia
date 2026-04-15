@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type SortOption = 'date-desc' | 'date-asc' | 'severity-desc' | 'severity-asc';
@@ -10,6 +11,11 @@ export default function TableIncendiesStyleApple({ data, catastrophes = [], inon
   const [selected, setSelected] = useState<any | null>(null);
   const [activeSort, setActiveSort] = useState<SortOption>('date-desc');
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Debug: Afficher les données reçues
   console.log('🔍 TableIncendies - Données reçues:', data.length, 'incendies');
@@ -84,7 +90,7 @@ export default function TableIncendiesStyleApple({ data, catastrophes = [], inon
       <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto">
           <span className="text-sm font-bold text-slate-600 shrink-0">Filtrer :</span>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-[calc(100vw-4rem)] md:w-full no-scrollbar">
             <button
               onClick={() => setActiveFilter('all')}
               className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
@@ -140,7 +146,7 @@ export default function TableIncendiesStyleApple({ data, catastrophes = [], inon
 
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto">
           <span className="text-sm font-bold text-slate-600 shrink-0">Trier :</span>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-[calc(100vw-4rem)] md:w-full no-scrollbar">
             <button
               onClick={() => setActiveSort('date-desc')}
               className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 shrink-0 ${
@@ -185,8 +191,8 @@ export default function TableIncendiesStyleApple({ data, catastrophes = [], inon
         </div>
       </div>
 
-      <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.05)] overflow-hidden">
-        <div className="overflow-x-auto w-full">
+      <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.05)] overflow-hidden w-[calc(100vw-3rem)] sm:w-full">
+        <div className="overflow-x-auto w-full no-scrollbar">
           <table className="w-full border-collapse min-w-[700px]">
             <thead>
               <tr className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] border-b border-gray-50/50">
@@ -251,7 +257,11 @@ export default function TableIncendiesStyleApple({ data, catastrophes = [], inon
                         <motion.button 
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => setSelected(inc)} 
+                          onClick={() => {
+                            // S'assurer que le body ne scroll plus quand le modal s'ouvre
+                            document.body.style.overflow = 'hidden';
+                            setSelected(inc);
+                          }} 
                           className="inline-flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-full bg-[#F2F2F7] text-[#1C1C1E] hover:bg-[#1C1C1E] hover:text-white text-[12px] md:text-[13px] font-bold transition-all whitespace-nowrap"
                         >
                           Détails
@@ -267,11 +277,17 @@ export default function TableIncendiesStyleApple({ data, catastrophes = [], inon
       </div>
 
       {/* Détail de l'incident (Modal) */}
-      <AnimatePresence>
-        {selected && (
-          <ModalDetail selected={selected} onClose={() => setSelected(null)} />
-        )}
-      </AnimatePresence>
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selected && (
+            <ModalDetail selected={selected} onClose={() => {
+              document.body.style.overflow = 'unset';
+              setSelected(null);
+            }} />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
@@ -289,9 +305,11 @@ function SeverityBadge({ level }: { level: number }) {
 
 function ModalDetail({ selected, onClose }: { selected: any, onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
       <motion.div 
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }}
         onClick={onClose}
         className="fixed inset-0 bg-[#1C1C1E]/60 backdrop-blur-xl"
       />
@@ -300,7 +318,7 @@ function ModalDetail({ selected, onClose }: { selected: any, onClose: () => void
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 40 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white rounded-[3rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 relative z-10"
+        className="bg-white rounded-[3rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 relative z-[101]"
       >
         {/* En-tête */}
         <div className="flex justify-between items-start mb-8 sticky top-0 bg-white z-10 pb-4">
@@ -335,8 +353,8 @@ function ModalDetail({ selected, onClose }: { selected: any, onClose: () => void
           {/* Coordonnées GPS */}
           {(selected.latitude || selected.lat) && (selected.longitude || selected.lng) && (
             <div className="grid grid-cols-2 gap-4">
-              <InfoCard label="Latitude" value={(selected.latitude || selected.lat)?.toFixed(6) || 'N/A'} />
-              <InfoCard label="Longitude" value={(selected.longitude || selected.lng)?.toFixed(6) || 'N/A'} />
+              <InfoCard label="Latitude" value={Number(selected.latitude || selected.lat).toFixed(6) || 'N/A'} />
+              <InfoCard label="Longitude" value={Number(selected.longitude || selected.lng).toFixed(6) || 'N/A'} />
             </div>
           )}
 

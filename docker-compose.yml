@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   # ============================================
   # PostgreSQL - Base de données
   # ============================================
@@ -27,7 +26,36 @@ services:
       retries: 5
 
   # ============================================
-  # pgAdmin - Interface d'administration Postgres
+  # n8n - Automatisation (Optimisé Mac Studio)
+  # ============================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: osint_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=osint_sinistres
+      - DB_POSTGRESDB_USER=admin
+      - DB_POSTGRESDB_PASSWORD=admin
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      # Supprime la ligne ci-dessous si tu n'utilises pas de tunnel/nom de domaine
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - osint_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ============================================
+  # pgAdmin - Interface d'administration
   # ============================================
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -52,6 +80,8 @@ volumes:
   postgres_data:
     driver: local
   pgadmin_data:
+    driver: local
+  n8n_data:
     driver: local
 
 # ============================================

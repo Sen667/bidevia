@@ -93,7 +93,7 @@ export default async function Home() {
 
           {/* Map Container */}
           <div className="xl:col-span-9 group relative bg-white rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white shadow-[0_20px_50px_rgba(0,0,0,0.08)] min-h-[400px] xl:min-h-0">
-            <MapClient data={incendies} />
+            <MapClient data={incendies} catastrophes={catastrophes} inondations={inondations} degats={degats} />
             
             {/* Map UI Overlays */}
             <div className="absolute top-6 left-6 pointer-events-none">

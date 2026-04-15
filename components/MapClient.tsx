@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Incendie } from '@/lib/types';
+import { Incendie, CatastropheNaturelle, Inondation, DegatDesEaux } from '@/lib/types';
 
 // Import dynamique de la carte pour éviter les erreurs "window not defined"
 const MapWithNoSSR = dynamic(() => import('@/components/Map'), {
@@ -11,8 +11,11 @@ const MapWithNoSSR = dynamic(() => import('@/components/Map'), {
 
 interface MapClientProps {
   data: Incendie[];
+  catastrophes?: CatastropheNaturelle[];
+  inondations?: Inondation[];
+  degats?: DegatDesEaux[];
 }
 
-export default function MapClient({ data }: MapClientProps) {
-  return <MapWithNoSSR data={data} />;
+export default function MapClient({ data, catastrophes = [], inondations = [], degats = [] }: MapClientProps) {
+  return <MapWithNoSSR data={data} catastrophes={catastrophes} inondations={inondations} degats={degats} />;
 }

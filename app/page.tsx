@@ -1,7 +1,10 @@
-import { getIncendies, getIncendiesRaw, getCatastropheNaturelles, getInondations, getDegatsDesEaux } from '@/lib/postgres';
+import { getIncendies, getIncendiesRaw, getCatastropheNaturelles, getInondations, getDegatsDesEaux, getLatestArticlesFromDatabase, type LiveArticle } from '@/lib/postgres';
 import MapClient from '@/components/MapClient';
 import TableIncendies from '@/components/TableIncendies';
-import { motion } from 'framer-motion'; 
+import AutoRefresh from '@/components/AutoRefresh';
+import LocalAiChat from '@/components/LocalAiChat';
+
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const incendies = await getIncendies();
@@ -13,6 +16,9 @@ export default async function Home() {
   const inondations = await getInondations();
   
   const degats = await getDegatsDesEaux();
+
+  const liveArticles = await getLatestArticlesFromDatabase(12);
+  console.log('📰 Nombre d\'articles Flux Live (DB):', liveArticles.length);
   
   console.log('📊 Nombre d\'incendies avec GPS:', incendies.length);
   console.log('📊 Nombre TOTAL d\'incendies:', allIncendies.length);
@@ -23,18 +29,6 @@ export default async function Home() {
   
   const totalIncendies = allIncendies.length;
   const highSeverity = allIncendies.filter(i => (i.severity_index || i.gravite) >= 4).length;
-
-  const now = new Date();
-  const today = allIncendies.filter(inc => {
-    const incDate = inc.incident_date || inc.date;
-    return incDate && new Date(incDate).toDateString() === now.toDateString();
-  });
-  const yesterday = allIncendies.filter(inc => {
-    const y = new Date();
-    y.setDate(now.getDate() - 1);
-    const incDate = inc.incident_date || inc.date;
-    return incDate && new Date(incDate).toDateString() === y.toDateString();
-  });
 
   return (
     <main className="min-h-screen bg-[#F2F2F7] text-[#1C1C1E] font-sans selection:bg-blue-500/20">
@@ -71,6 +65,7 @@ export default async function Home() {
                 </p>
               </div>
             </div>
+            <AutoRefresh intervalMs={60_000} showIndicator className="hidden sm:flex" />
           </div>
         </header>
 
@@ -85,9 +80,7 @@ export default async function Home() {
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-8">
-              <SectionIncendie title="Aujourd'hui" data={today} />
-              <SectionIncendie title="Hier" data={yesterday} />
-              {/* Ajoute d'autres sections si besoin */}
+              <SectionArticles title="Derniers articles (DB)" data={liveArticles} />
             </div>
           </div>
 
@@ -116,6 +109,14 @@ export default async function Home() {
           </div>
         </section>
 
+        <section className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-2 gap-4">
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight">Assistant local</h2>
+            <div className="hidden sm:block h-px flex-1 mx-8 bg-gradient-to-r from-gray-200 to-transparent" />
+          </div>
+          <LocalAiChat />
+        </section>
+
       </div>
     </main>
   );
@@ -132,39 +133,79 @@ function StatCard({ label, value, color, isAlert }: { label: string, value: numb
   );
 }
 
-function SectionIncendie({ title, data }: { title: string, data: any[] }) {
-  if (data.length === 0) return null;
+function formatArticleTime(pubDate: string): string {
+  if (!pubDate) return 'N/A';
+  const parsed = new Date(pubDate);
+  if (Number.isNaN(parsed.getTime())) return 'N/A';
+  return parsed.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function SectionArticles({ title, data }: { title: string, data: LiveArticle[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">{title}</h3>
+        <div className="p-5 rounded-[1.8rem] bg-white border border-gray-100/50 text-[13px] text-slate-500 font-medium">
+          Aucun article disponible en base pour le moment.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">{title}</h3>
       <div className="space-y-3">
-        {data.map((inc) => (
-          <div key={inc.id} className="group p-5 rounded-[1.8rem] bg-white border border-gray-100/50 hover:border-blue-200 shadow-sm hover:shadow-[0_10px_25px_rgba(0,0,0,0.03)] transition-all duration-500 cursor-pointer">
-            <div className="flex justify-between items-start mb-2">
-              <h4 className="font-bold text-[16px] text-[#1C1C1E] group-hover:text-blue-600 transition-colors">
-                {inc.city || inc.ville || 'Ville inconnue'}
-              </h4>
-              <span className="text-[10px] font-bold text-slate-300 tabular-nums">
-                {inc.incident_time || (inc.incident_date ? new Date(inc.incident_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : (inc.date ? new Date(inc.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'))}
-              </span>
+        {data.map((article) => (
+          article.link ? (
+            <a
+              key={article.id}
+              href={article.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block group p-5 rounded-[1.8rem] bg-white border border-gray-100/50 hover:border-blue-200 shadow-sm hover:shadow-[0_10px_25px_rgba(0,0,0,0.03)] transition-all duration-500"
+            >
+              <ArticleCardContent article={article} isClickable />
+            </a>
+          ) : (
+            <div
+              key={article.id}
+              className="group p-5 rounded-[1.8rem] bg-white border border-gray-100/50 shadow-sm"
+            >
+              <ArticleCardContent article={article} isClickable={false} />
             </div>
-            <p className="text-[13px] text-slate-500 leading-relaxed line-clamp-2 font-medium mb-3">
-              {inc.summary || inc.resume || "Aucune description disponible pour cet événement."}
-            </p>
-            <div className="flex items-center justify-between">
-                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
-                  (inc.severity_index || inc.gravite) >= 4 ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
-                }`}>
-                  {inc.building_type || inc.type || 'Incident'}
-                </span>
-                <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </div>
-            </div>
-          </div>
+          )
         ))}
       </div>
     </div>
+  );
+}
+
+function ArticleCardContent({ article, isClickable }: { article: LiveArticle; isClickable: boolean }) {
+  return (
+    <>
+      <div className="flex justify-between items-start mb-2">
+        <h4 className={`font-bold text-[16px] text-[#1C1C1E] ${isClickable ? 'group-hover:text-blue-600 transition-colors' : ''}`}>
+          {article.source}
+        </h4>
+        <span className="text-[10px] font-bold text-slate-300 tabular-nums">
+          {formatArticleTime(article.pubDate)}
+        </span>
+      </div>
+      <p className="text-[13px] text-slate-500 leading-relaxed line-clamp-2 font-medium mb-3">
+        {article.title}
+      </p>
+      <div className="flex items-center justify-between">
+        <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-600">
+          {isClickable ? 'Article' : 'Article sans lien'}
+        </span>
+        <div className={`w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center ${isClickable ? 'opacity-0 group-hover:opacity-100 transition-opacity' : 'opacity-30'}`}>
+          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+      </div>
+    </>
   );
 }

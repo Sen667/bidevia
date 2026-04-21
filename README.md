@@ -38,6 +38,25 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Setup N8N Workflow 
 
+## Chatbot local LM Studio
+
+1. Lancez LM Studio et démarrez le serveur local API (par défaut sur `http://127.0.0.1:1234`).
+2. Ajoutez un fichier `.env.local` à la racine du projet:
+
+```env
+LM_STUDIO_BASE_URL=http://127.0.0.1:1234
+LM_STUDIO_MODEL=openai/gpt-oss-20b
+LM_STUDIO_TEMPERATURE=0.4
+LM_STUDIO_MAX_TOKENS=600
+```
+
+3. Démarrez l'application avec `npm run dev`.
+4. Ouvrez l'interface et utilisez la section "Assistant local".
+
+Notes:
+- L'endpoint utilisé par l'app est `POST /api/chat/local`.
+- La route serveur appelle LM Studio via `POST /v1/chat/completions`.
+
 Installer model ia avec llm studio pour faire tourner en local
 
 Puis copier coller ses workflow:

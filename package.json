@@ -14,7 +14,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cleanup:articles": "node scripts/cleanup-old-articles.cjs",
+    "cleanup:articles:48h": "node scripts/cleanup-old-articles.cjs --hours=48"
   },
   "dependencies": {
     "@types/pg": "^8.16.0",
